@@ -51,6 +51,7 @@ jobs:
           git config user.name "GitHub Actions"
           git checkout -b dev2.1
           rm -rf .github
+          rm -f README.md
           cp -r husi/* .
           cp -r husi/.github .
           rm -rf husi
