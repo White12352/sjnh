@@ -21,13 +21,6 @@ jobs:
         run: find . -type d -exec chmod 0755 {} + -o -type f -exec chmod 0755 {} + && find buildScript libcore/*.sh | xargs cat | sha1sum > golang_status
       - name: Libcore Status
         run: git ls-files libcore | xargs cat | sha1sum > libcore_status
-      - name: LibCore Cache
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            app/libs/libcore.aar
-          key: ${{ hashFiles('.github/workflows/*', 'golang_status', 'libcore_status') }}
       - name: Golang Version
         if: steps.cache.outputs.cache-hit != 'true'
         id: version
@@ -35,24 +28,19 @@ jobs:
           source buildScript/init/version.sh
           echo go_version=$GO_VERSION >> $GITHUB_OUTPUT
       - name: Install Golang
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: ${{ steps.version.outputs.go_version }}
           cache-dependency-path: libcore/go.sum
       - uses: actions/setup-java@v4
-        if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: "17"
           distribution: "temurin"
       - name: Patch Go
-        if: steps.cache.outputs.cache-hit != 'true'
-        # https://github.com/golang/go/commit/3560cf0afb3c29300a6c88ccd98256949ca7a6f6
         run: |
           cd "$(go env GOROOT)"
           curl "https://go-review.googlesource.com/changes/go~600296/revisions/1/patch" | base64 -d | patch --verbose -p 1
       - name: Native Build
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           ./run lib core
       - name: Upload libcore
